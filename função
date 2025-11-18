@@ -1,0 +1,181 @@
+import mysql.connector
+import requests
+import os
+import streamlit as st
+
+def conectar():
+    return mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="",
+        database="treinadores_pokemon"
+    )
+    
+
+def inserir_treinador(nome, cidade, imagem, id):
+    nome_imagem = salvar_imagem(imagem, nome)
+    conn = conectar()
+    cursor = conn.cursor()
+    
+    cursor.execute("INSERT INTO treinadores (nome, cidade, id, imagem) VALUES (%s, %s, %s, %s)", (nome, cidade, id, nome_imagem))
+    conn.commit()
+    conn.close()
+
+def verificar_treinador(id):
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM treinadores WHERE id = %s", (id,))
+    dados = cursor.fetchone()
+    conn.close()
+    if dados:
+        return True
+    else:
+        return False
+
+def deletar_treinador(id):
+    print("ID recebido para deletar:", id) 
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM treinadores WHERE id = %s", (id,))
+    cursor.execute("DELETE FROM pokemons WHERE id_treinador = %s", (id,))
+    conn.commit()
+    conn.close()
+    
+    
+def buscar_pokemon(pokemon):
+    link = f"https://pokeapi.co/api/v2/pokemon/{pokemon}"
+    try:
+        requisição = requests.get(link)
+
+        if requisição.status_code == 200:
+            dados = requisição.json()
+            return dados
+        else:
+            return False
+
+    except Exception as e:
+        st.error(f"Ocorreu o erro: {e}")
+ 
+def salvar_imagem(imagem, nome):
+    pasta = "imagens"
+    if not os.path.exists(pasta):
+        os.makedirs(pasta)
+
+    nome_arquivo = f"{nome.lower().replace(' ', '_')}.png"
+    caminho = os.path.join(pasta, nome_arquivo)
+
+    with open(caminho, "wb") as f:
+        f.write(imagem.getbuffer())
+
+    return nome_arquivo
+        
+def adicionar_pokemon(nome, id, imagem):
+            nome_imagem = salvar_imagem(imagem, nome)
+            dados = buscar_pokemon(nome)
+            altura = float(dados['height'])
+            peso = float(dados['weight'])
+            tipo = dados["types"][0]["type"]["name"]
+            if dados != False:
+                conn = conectar()
+                cursor = conn.cursor()
+                cursor.execute(
+                    "INSERT INTO pokemons (nome, altura, peso, tipo, id_treinador, imagem) VALUES (%s, %s, %s, %s, %s, %s)",
+                    (nome, altura, peso, tipo, id, nome_imagem)
+                )
+                conn.commit()
+                conn.close()
+
+                st.success("Pokémon cadastrado com sucesso!")
+            else:
+                st.error("Pokémon não encontrado")
+
+def mostrar_treinador(id):
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT nome, cidade, imagem FROM treinadores WHERE id = %s", (id,))
+    treinador = cursor.fetchall()
+    conn.close()
+
+    if not treinador:
+        st.warning("Esse treinador não existe.")
+        return
+    col1, col2 = st.columns(2)
+    nome, cidade, imagem = treinador[0]
+    with col1:
+        st.subheader(f'Nome: {nome}')
+        st.subheader(f'Cidade: {cidade}')
+    with col2:
+        if imagem:
+            st.image(f"imagens/{imagem}", width=100, caption="")
+        else:
+            st.text("Imagem não disponível")
+    
+def mostrar_pokemon(id):
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT nome, altura, peso, tipo, imagem FROM pokemons WHERE id_treinador = %s", (id,))
+    pokemons = cursor.fetchall()
+    conn.close()
+
+    if not pokemons:
+        st.warning("Esse treinador ainda não possui Pokémon cadastrados.")
+        return
+
+    colunas = st.columns(3)
+    
+    for i, pokemon in enumerate(pokemons):
+        nome, altura, peso, tipo, imagem = pokemon
+        coluna_atual = colunas[i % 3]
+        
+        with coluna_atual:
+            with st.expander(f"{nome}", expanded=True):
+                numero_pokemon = f"N° {i+1:04d}"
+                st.markdown(f"**{numero_pokemon}**")
+                
+                if imagem:
+                    st.image(f"imagens/{imagem}", width=100, caption="")
+                else:
+                    st.text("Imagem não disponível")
+                
+                st.markdown(f"**Tipo:** {tipo}")
+                st.markdown(f"**Altura:** {altura} m")
+                st.markdown(f"**Peso:** {peso} kg")
+                
+def mostrar_pokemons():
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("SELECT nome, altura, peso, tipo, id_treinador, imagem FROM pokemons")
+    pokemons = cursor.fetchall()
+    conn.close()
+
+    if not pokemons:
+        st.warning("Ainda não foram encontrados nenhum Pokémon.")
+        return
+
+    colunas = st.columns(3)
+    for i, pokemon in enumerate(pokemons):
+        nome, altura, peso, tipo, idTreinador, imagem = pokemon
+        
+        conn = conectar()
+        cursor = conn.cursor()
+        cursor.execute("SELECT nome FROM treinadores WHERE id = %s", (idTreinador,))
+        resultado = cursor.fetchone()
+        conn.close()
+        nomeT = resultado[0]
+        
+        coluna_atual = colunas[i % 3]
+        with coluna_atual:
+            with st.expander(f"{nome}", expanded=True):
+                numero_pokemon = f"N° {i+1:04d}"
+                st.markdown(f"**{numero_pokemon}**")
+
+                if imagem:
+                    st.image(f"imagens/{imagem}", width=100, caption="")
+                else:
+                    st.text("Imagem não disponível")
+                st.markdown(f"**Tipo:** {tipo}")
+                st.markdown(f"**Altura:** {altura} m")
+                st.markdown(f"**Peso:** {peso} kg")
+                st.markdown(f"**Treinador:** {nomeT}")
