@@ -3,10 +3,10 @@ import streamlit as st
 import functions
 
 def app():
-    st.title("Captura de Pokémon")
+    st.title("Captura Pokémons")
     with st.form('button'):
-        pokemon = st.text_input("Digite o nome do Pokémon capturado").lower()
-        id = st.text_input("Digite o id do treinador que o capturou")
+        pokemon = st.text_input("Nome do Pokémon capturado...").lower()
+        id = st.text_input("Digite o código do treinador que o capturou")
         imagem = st.file_uploader("Envie uma imagem do Pokémon", type=["png", "jpg", "jpeg"])
         button = st.form_submit_button('Capturar!')
 
