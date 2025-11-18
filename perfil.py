@@ -5,7 +5,7 @@ import functions
 def app():
     if 'logado' not in st.session_state:
         st.session_state.logado = False
-    if 'id_treinador' not in st.session_state:
+    if 'códogo_treinador' not in st.session_state:
         st.session_state.id_treinador = None
     if 'nome_treinador' not in st.session_state:
         st.session_state.nome_treinador = None
@@ -17,7 +17,7 @@ def app():
         with st.form('login_form'):
             nome = st.text_input("Digite seu nome")
             cidade = st.text_input("Digite sua cidade")
-            id = st.text_input("Digite seu ID de treinador")
+            código = st.text_input("Digite seu ID de treinador")
             button = st.form_submit_button('Entrar')
 
         st.write("Não tem conta?")
@@ -33,7 +33,7 @@ def app():
                 st.session_state.cidade_treinador = cidade
                 st.rerun()
             else:
-                st.error('ID inválido')
+                st.error('código inválido')
     
     else:
         st.header('Perfil:')
