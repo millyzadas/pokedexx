@@ -12,19 +12,19 @@ def conectar():
     )
     
 
-def inserir_treinador(nome, cidade, imagem, id):
+def inserir_treinador(nome, cidade, imagem, código):
     nome_imagem = salvar_imagem(imagem, nome)
     conn = conectar()
     cursor = conn.cursor()
     
-    cursor.execute("INSERT INTO treinadores (nome, cidade, id, imagem) VALUES (%s, %s, %s, %s)", (nome, cidade, id, nome_imagem))
+    cursor.execute("INSERT INTO treinadores (nome, cidade, código, imagem) VALUES (%s, %s, %s, %s)", (nome, cidade, código, nome_imagem))
     conn.commit()
     conn.close()
 
-def verificar_treinador(id):
+def verificar_treinador(código):
     conn = conectar()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM treinadores WHERE id = %s", (id,))
+    cursor.execute("SELECT * FROM treinadores WHERE código = %s", (código,))
     dados = cursor.fetchone()
     conn.close()
     if dados:
@@ -32,12 +32,12 @@ def verificar_treinador(id):
     else:
         return False
 
-def deletar_treinador(id):
-    print("ID recebido para deletar:", id) 
+def deletar_treinador(código):
+    print("código recebido para deletar:", código) 
     conn = conectar()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM treinadores WHERE id = %s", (id,))
-    cursor.execute("DELETE FROM pokemons WHERE id_treinador = %s", (id,))
+    cursor.execute("DELETE FROM treinadores WHERE id = %s", (código,))
+    cursor.execute("DELETE FROM pokemons WHERE código_treinador = %s", (código,))
     conn.commit()
     conn.close()
     
@@ -69,7 +69,7 @@ def salvar_imagem(imagem, nome):
 
     return nome_arquivo
         
-def adicionar_pokemon(nome, id, imagem):
+def adicionar_pokemon(nome, código, imagem):
             nome_imagem = salvar_imagem(imagem, nome)
             dados = buscar_pokemon(nome)
             altura = float(dados['height'])
@@ -79,8 +79,8 @@ def adicionar_pokemon(nome, id, imagem):
                 conn = conectar()
                 cursor = conn.cursor()
                 cursor.execute(
-                    "INSERT INTO pokemons (nome, altura, peso, tipo, id_treinador, imagem) VALUES (%s, %s, %s, %s, %s, %s)",
-                    (nome, altura, peso, tipo, id, nome_imagem)
+                    "INSERT INTO pokemons (nome, altura, peso, tipo, código_treinador, imagem) VALUES (%s, %s, %s, %s, %s, %s)",
+                    (nome, altura, peso, tipo, código, nome_imagem)
                 )
                 conn.commit()
                 conn.close()
@@ -89,11 +89,11 @@ def adicionar_pokemon(nome, id, imagem):
             else:
                 st.error("Pokémon não encontrado")
 
-def mostrar_treinador(id):
+def mostrar_treinador(código):
     conn = conectar()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT nome, cidade, imagem FROM treinadores WHERE id = %s", (id,))
+    cursor.execute("SELECT nome, cidade, imagem FROM treinadores WHERE código = %s", (código,))
     treinador = cursor.fetchall()
     conn.close()
 
@@ -111,11 +111,11 @@ def mostrar_treinador(id):
         else:
             st.text("Imagem não disponível")
     
-def mostrar_pokemon(id):
+def mostrar_pokemon(código):
     conn = conectar()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT nome, altura, peso, tipo, imagem FROM pokemons WHERE id_treinador = %s", (id,))
+    cursor.execute("SELECT nome, altura, peso, tipo, imagem FROM pokemons WHERE id_treinador = %s", (código,))
     pokemons = cursor.fetchall()
     conn.close()
 
@@ -146,7 +146,7 @@ def mostrar_pokemon(id):
 def mostrar_pokemons():
     conn = conectar()
     cursor = conn.cursor()
-    cursor.execute("SELECT nome, altura, peso, tipo, id_treinador, imagem FROM pokemons")
+    cursor.execute("SELECT nome, altura, peso, tipo, código_treinador, imagem FROM pokemons")
     pokemons = cursor.fetchall()
     conn.close()
 
@@ -156,11 +156,11 @@ def mostrar_pokemons():
 
     colunas = st.columns(3)
     for i, pokemon in enumerate(pokemons):
-        nome, altura, peso, tipo, idTreinador, imagem = pokemon
+        nome, altura, peso, tipo, códigoTreinador, imagem = pokemon
         
         conn = conectar()
         cursor = conn.cursor()
-        cursor.execute("SELECT nome FROM treinadores WHERE id = %s", (idTreinador,))
+        cursor.execute("SELECT nome FROM treinadores WHERE código = %s", (idTreinador,))
         resultado = cursor.fetchone()
         conn.close()
         nomeT = resultado[0]
