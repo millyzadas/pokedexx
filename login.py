@@ -5,7 +5,7 @@ def app():
     with st.form('button'):
         nome = st.text_input("Digite seu nome")
         cidade = st.text_input("Digite sua cidade")
-        id = st.text_input("Digite seu ID de treinador")
+        id = st.text_input("Digite seu código de treinador")
         button = st.form_submit_button('Entrar')
 
     st.write("Não tem conta?")
